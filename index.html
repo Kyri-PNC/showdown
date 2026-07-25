@@ -1,0 +1,1462 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quest Value Finder</title>
+<style>
+  :root {
+    --bg: #f5f3ff;
+    --bg-grad-1: #ede9fe;
+    --bg-grad-2: #fdf4ff;
+    --card: #ffffff;
+    --text: #1a1f2e;
+    --muted: #6b7280;
+    --accent: #6366f1;
+    --accent-hover: #4f46e5;
+    --accent-soft: #eef2ff;
+    --border: #e5e7eb;
+    --border-strong: #d1d5db;
+    --shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 4px 16px rgba(15, 23, 42, 0.04);
+    --shadow-lift: 0 4px 12px rgba(99, 102, 241, 0.18);
+    --tier-best: #16a34a;
+    --tier-violet: #dc2626;
+    --tier-blue: #2563eb;
+    --tier-red: #dc2626;
+    --tier-best-bg: #dcfce7;
+    --tier-violet-bg: #fee2e2;
+    --tier-blue-bg: #dbeafe;
+    --tier-red-bg: #fee2e2;
+    --badge-text: #ffffff;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0b0f1a;
+      --bg-grad-1: #1a1b3a;
+      --bg-grad-2: #1f1235;
+      --card: #161922;
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+      --accent: #818cf8;
+      --accent-hover: #a5b4fc;
+      --accent-soft: #1e1b4b;
+      --border: #262b36;
+      --border-strong: #374151;
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 4px 16px rgba(0, 0, 0, 0.3);
+      --shadow-lift: 0 4px 16px rgba(129, 140, 248, 0.25);
+      --tier-best: #4ade80;
+      --tier-violet: #fca5a5;
+      --tier-blue: #93c5fd;
+      --tier-red: #fca5a5;
+      --tier-best-bg: rgba(74, 222, 128, 0.14);
+      --tier-violet-bg: rgba(252, 165, 165, 0.12);
+      --tier-blue-bg: rgba(147, 197, 253, 0.14);
+      --tier-red-bg: rgba(252, 165, 165, 0.12);
+      --badge-text: #0b1220;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
+    background:
+      radial-gradient(1200px 600px at 0% 0%, var(--bg-grad-1), transparent 60%),
+      radial-gradient(1000px 500px at 100% 30%, var(--bg-grad-2), transparent 60%),
+      var(--bg);
+    background-attachment: fixed;
+    color: var(--text);
+    line-height: 1.5;
+    padding: 32px 16px 48px;
+    min-height: 100vh;
+  }
+  main {
+    max-width: 880px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+  header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding: 4px 4px;
+  }
+  header .titles { flex: 1; min-width: 200px; }
+  header h1 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin: 0 0 4px;
+    letter-spacing: -0.02em;
+    background: linear-gradient(135deg, var(--accent) 0%, #c026d3 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  header p { margin: 0; color: var(--muted); font-size: 0.95rem; }
+  .lang-select {
+    font: inherit;
+    padding: 8px 12px;
+    border: 1px solid var(--border-strong);
+    background: var(--card);
+    color: var(--text);
+    border-radius: 10px;
+    box-shadow: var(--shadow);
+    cursor: pointer;
+  }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    box-shadow: var(--shadow);
+  }
+  .card-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    margin: 0;
+  }
+
+  .search-input {
+    font: inherit;
+    width: 100%;
+    padding: 12px 16px 12px 40px;
+    border: 1.5px solid var(--border-strong);
+    background: var(--card);
+    color: var(--text);
+    border-radius: 10px;
+    font-size: 1rem;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='11' cy='11' r='7'/><path d='m21 21-4.3-4.3'/></svg>");
+    background-repeat: no-repeat;
+    background-position: 12px center;
+  }
+  .search-input:focus {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+    border-color: var(--accent);
+  }
+  .points-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 9px;
+    border-radius: 999px;
+    background: rgba(99, 102, 241, 0.12);
+    color: var(--accent);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+  .points-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+    gap: 8px;
+  }
+  .chip { position: relative; }
+  .chip input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .chip label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 6px 8px;
+    text-align: center;
+    border: 1.5px solid var(--border-strong);
+    background: var(--card);
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: transform 0.12s ease, border-color 0.12s ease, background 0.12s ease, color 0.12s ease, box-shadow 0.12s ease;
+    font-variant-numeric: tabular-nums;
+    color: var(--text);
+    user-select: none;
+    line-height: 1.1;
+  }
+  .chip label .chip-count {
+    display: block;
+    font-size: 0.65rem;
+    font-weight: 500;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+  .chip label:hover {
+    border-color: var(--accent);
+    transform: translateY(-1px);
+  }
+  .chip input:checked + label {
+    background: linear-gradient(135deg, var(--accent) 0%, #a855f7 100%);
+    color: white;
+    border-color: transparent;
+    box-shadow: var(--shadow-lift);
+  }
+  .chip input:checked + label .chip-count {
+    color: rgba(255, 255, 255, 0.85);
+  }
+  .chip input:focus-visible + label {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field label { font-size: 0.875rem; color: var(--muted); font-weight: 500; }
+  .field input, .field select, .field textarea {
+    font: inherit;
+    padding: 10px 12px;
+    border: 1px solid var(--border-strong);
+    background: var(--card);
+    color: var(--text);
+    border-radius: 10px;
+  }
+  .field textarea { resize: vertical; min-height: 60px; }
+  .field input:focus, .field select:focus, .field textarea:focus {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+  }
+
+  .results-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    color: var(--muted);
+    font-size: 0.9rem;
+    padding: 0 4px;
+  }
+  .results-header strong { color: var(--text); font-size: 1rem; }
+  .task {
+    position: relative;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px 18px;
+    background: var(--card);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
+  }
+  .task::before {
+    content: "";
+    position: absolute;
+    top: 0; bottom: 0; left: 0;
+    width: 4px;
+  }
+  .task:hover { transform: translateY(-1px); box-shadow: var(--shadow-lift); }
+  .task.tier-best   { background: var(--tier-best-bg);   border-color: rgba(22, 163, 74, 0.25); }
+  .task.tier-violet { background: var(--tier-violet-bg); border-color: rgba(220, 38, 38, 0.20); }
+  .task.tier-blue   { background: var(--tier-blue-bg);   border-color: rgba(37, 99, 235, 0.22); }
+  .task.tier-red    { background: var(--tier-red-bg);    border-color: rgba(220, 38, 38, 0.25); }
+  .task.tier-best::before   { background: var(--tier-best); }
+  .task.tier-violet::before { background: var(--tier-violet); }
+  .task.tier-blue::before   { background: var(--tier-blue); }
+  .task.tier-red::before    { background: var(--tier-red); }
+
+  .task-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .task-name { font-weight: 700; font-size: 1.05rem; flex: 1; min-width: 140px; letter-spacing: -0.01em; }
+  .task-meta {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    color: var(--muted);
+    font-size: 0.9rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .task-meta.amount { color: var(--text); font-weight: 600; }
+  .tier-badge {
+    display: inline-block;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 3px 10px;
+    border-radius: 999px;
+  }
+  .task.tier-best   .tier-badge { color: var(--badge-text); background: var(--tier-best); }
+  .task.tier-violet .tier-badge { color: var(--badge-text); background: var(--tier-violet); }
+  .task.tier-blue   .tier-badge { color: var(--badge-text); background: var(--tier-blue); }
+  .task.tier-red    .tier-badge { color: var(--badge-text); background: var(--tier-red); }
+
+  .task-extra { font-size: 0.9rem; color: var(--text); line-height: 1.45; }
+  .task-extra .label { color: var(--muted); font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 2px; }
+  .task-actions { display: flex; gap: 6px; margin-top: 4px; }
+  .icon-btn {
+    font: inherit;
+    font-size: 0.8rem;
+    padding: 5px 12px;
+    border: 1px solid var(--border-strong);
+    background: transparent;
+    color: var(--muted);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: color 0.12s, border-color 0.12s;
+  }
+  .icon-btn:hover { color: var(--accent); border-color: var(--accent); }
+
+  .empty {
+    text-align: center;
+    color: var(--muted);
+    padding: 32px 16px;
+    background: var(--card);
+    border: 1px dashed var(--border-strong);
+    border-radius: 14px;
+  }
+  .empty-hint { display: block; font-size: 0.85rem; margin-top: 6px; }
+
+  details.legend summary {
+    cursor: pointer;
+    padding: 4px 0;
+    font-weight: 600;
+    list-style: none;
+  }
+  details.legend summary::-webkit-details-marker { display: none; }
+  details.legend summary::before { content: "▸ "; color: var(--muted); transition: transform 0.15s; display: inline-block; }
+  details.legend[open] summary::before { content: "▾ "; }
+  details.legend ul { margin: 10px 0 0; padding-left: 0; list-style: none; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
+  details.legend li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.875rem;
+    padding: 8px 12px;
+    background: var(--bg);
+    border-radius: 10px;
+    border: 1px solid var(--border);
+  }
+  .tier-dot {
+    width: 12px; height: 12px; border-radius: 4px; flex: 0 0 12px;
+  }
+  .tier-dot.best   { background: var(--tier-best); }
+  .tier-dot.violet { background: var(--tier-violet); }
+  .tier-dot.blue   { background: var(--tier-blue); }
+  .tier-dot.red    { background: var(--tier-red); }
+
+  .toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .toolbar .spacer { flex: 1; }
+  .btn {
+    font: inherit;
+    font-weight: 500;
+    padding: 10px 18px;
+    border: 1px solid var(--border-strong);
+    background: var(--card);
+    color: var(--text);
+    border-radius: 10px;
+    cursor: pointer;
+    box-shadow: var(--shadow);
+    transition: transform 0.12s, box-shadow 0.12s, border-color 0.12s;
+  }
+  .btn:hover { transform: translateY(-1px); border-color: var(--accent); }
+  .btn.primary {
+    background: linear-gradient(135deg, var(--accent) 0%, #a855f7 100%);
+    border-color: transparent;
+    color: white;
+  }
+  .btn.primary:hover { box-shadow: var(--shadow-lift); }
+  .btn.danger { color: var(--tier-red); }
+
+  .info {
+    font-size: 0.82rem;
+    color: var(--muted);
+    text-align: center;
+    padding: 4px 16px;
+  }
+
+  dialog {
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    background: var(--card);
+    color: var(--text);
+    padding: 0;
+    max-width: 560px;
+    width: calc(100% - 32px);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  }
+  dialog::backdrop { background: rgba(15, 23, 42, 0.55); backdrop-filter: blur(2px); }
+  dialog form { padding: 24px; display: flex; flex-direction: column; gap: 14px; }
+  dialog h2 { margin: 0; font-size: 1.25rem; font-weight: 700; letter-spacing: -0.01em; }
+  dialog .row { display: flex; gap: 12px; }
+  dialog .row > .field { flex: 1; }
+  dialog .actions { display: flex; justify-content: space-between; gap: 8px; margin-top: 6px; flex-wrap: wrap; }
+  dialog .actions .right { display: flex; gap: 8px; margin-left: auto; }
+  .lang-tag {
+    display: inline-block;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--accent);
+    background: var(--accent-soft);
+    padding: 1px 8px;
+    border-radius: 999px;
+    margin-left: 4px;
+    vertical-align: middle;
+  }
+
+  @media (max-width: 480px) {
+    body { padding: 20px 12px 32px; }
+    header h1 { font-size: 1.4rem; }
+    .card { padding: 16px; }
+    dialog .row { flex-direction: column; }
+    .points-grid { grid-template-columns: repeat(auto-fill, minmax(56px, 1fr)); }
+  }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <div class="titles">
+      <h1 data-i18n="title">Quest Value Finder</h1>
+      <p data-i18n="subtitle">Enter your quest points to see which tasks are available and which are worth doing.</p>
+    </div>
+    <select id="lang" class="lang-select" aria-label="Language"></select>
+  </header>
+
+  <section class="card">
+    <p class="card-label" data-i18n="search_label">Search by keyword</p>
+    <input id="search-input" class="search-input" type="search" autocomplete="off" placeholder="hero, research, food...">
+  </section>
+
+  <section class="card">
+    <p class="card-label" data-i18n="enter_points">Or select quest points</p>
+    <div id="points-grid" class="points-grid" role="radiogroup" aria-label="Quest points"></div>
+  </section>
+
+  <section id="results" aria-live="polite"></section>
+
+  <details class="legend card">
+    <summary data-i18n="legend_title">Legend</summary>
+    <ul>
+      <li><span class="tier-dot best"></span> <span><strong data-i18n="tier_best">Best</strong> — <span data-i18n="tier_best_desc">good value for points</span></span></li>
+      <li><span class="tier-dot blue"></span> <span><strong data-i18n="tier_blue">Has shorter equivalent</strong> — <span data-i18n="tier_blue_desc">a similar quest at higher points takes less time</span></span></li>
+      <li><span class="tier-dot violet"></span> <span><strong data-i18n="tier_violet">Skip</strong> — <span data-i18n="tier_violet_desc">not generally worth the effort</span></span></li>
+      <li><span class="tier-dot red"></span> <span><strong data-i18n="tier_red">Reset</strong> — <span data-i18n="tier_red_desc">should be reset, better quests available</span></span></li>
+    </ul>
+  </details>
+
+  <div class="toolbar">
+    <button id="add-btn" class="btn primary" data-i18n="add_task_btn">+ Add task</button>
+    <div class="spacer"></div>
+    <button id="export-btn" class="btn" data-i18n="export_btn">Export</button>
+    <button id="import-btn" class="btn" data-i18n="import_btn">Import</button>
+    <input id="import-file" type="file" accept="application/json" hidden>
+  </div>
+
+  <p class="info" data-i18n="info_local">Edits and added tasks are saved in your browser only. Use Export to back them up or share them with someone who can add them to the source.</p>
+</main>
+
+<dialog id="edit-dialog">
+  <form method="dialog" id="edit-form">
+    <h2 id="edit-title" data-i18n="modal_edit_title">Edit task</h2>
+
+    <div class="row">
+      <div class="field">
+        <label data-i18n="points_label">Points</label>
+        <input name="points" type="number" min="0" required>
+      </div>
+      <div class="field">
+        <label data-i18n="time_label">Time (hours)</label>
+        <input name="time" type="number" min="0" step="0.5" placeholder="?">
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="field">
+        <label data-i18n="amount_label">Amount</label>
+        <input name="amount" type="number" min="0" placeholder="?">
+      </div>
+      <div class="field">
+        <label data-i18n="tier_label">Tier</label>
+        <select name="tier">
+          <option value="best"   data-i18n="tier_best">Best</option>
+          <option value="blue"   data-i18n="tier_blue">Has shorter equivalent</option>
+          <option value="violet" data-i18n="tier_violet">Skip</option>
+          <option value="red"    data-i18n="tier_red">Reset</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="field" id="type-key-field">
+      <label data-i18n="type_label">Task type</label>
+      <select name="typeKey"></select>
+    </div>
+
+    <div class="field" id="custom-label-field" hidden>
+      <label><span data-i18n="custom_label_label">Custom task name</span> <span class="lang-tag"></span></label>
+      <input name="customLabel" type="text">
+    </div>
+
+    <div class="field">
+      <label><span data-i18n="description_label">Description</span> <span class="lang-tag"></span></label>
+      <textarea name="description" rows="2"></textarea>
+    </div>
+
+    <div class="field">
+      <label><span data-i18n="needed_label">Needed (requirements)</span> <span class="lang-tag"></span></label>
+      <textarea name="needed" rows="2" placeholder="e.g. 50 red or 125 purple hero cards"></textarea>
+    </div>
+
+    <div class="actions">
+      <button type="button" id="delete-btn" class="btn danger" hidden data-i18n="delete_btn">Delete</button>
+      <div class="right">
+        <button type="button" id="cancel-btn" class="btn" data-i18n="cancel_btn">Cancel</button>
+        <button type="submit" class="btn primary" data-i18n="save_btn">Save</button>
+      </div>
+    </div>
+  </form>
+</dialog>
+
+<script>
+const LANGS = [
+  { code: 'en', name: 'English' },
+  { code: 'de', name: 'Deutsch' },
+  { code: 'es', name: 'Español' },
+  { code: 'it', name: 'Italiano' },
+  { code: 'ru', name: 'Русский' },
+  { code: 'uk', name: 'Українська' },
+  { code: 'tr', name: 'Türkçe' },
+  { code: 'el', name: 'Ελληνικά' },
+];
+
+const TIERS = ['best', 'blue', 'violet', 'red'];
+
+const TASK_TYPES = [
+  'transport_resources','transport_food','transport_wood','transport_stone','transport_iron',
+  'arena_challenge','arena',
+  'heal_units','train_units','train_troops',
+  'consume_ap','consume_stamina','consume_alliance_coins','consume_diamonds','spend_alliance_coins',
+  'use_speedup_hours',
+  'gather_food','gather_wood','gather_stone','gather_iron','gather_resources',
+  'gather_gear_material','gather_rune_material','gather_totem_material','gather_holystone_material',
+  'get_hero_frag','gain_troop_power','increase_bldg_might','increase_troop_might','increase_rsch_might',
+  'conduct_research','challenge_den','black_market','help_allies',
+];
+
+const TASKS = [
+  { id: 1,   points: 52,  type: 'transport_resources',     amount: 6000000,  time: 3,  tier: 'violet' },
+  { id: 2,   points: 53,  type: 'arena_challenge',         amount: 2,        time: 6,  tier: 'violet' },
+  { id: 3,   points: 53,  type: 'heal_units',              amount: 15000,    time: 6,  tier: 'violet' },
+  { id: 4,   points: 53,  type: 'train_units',             amount: 15000,    time: 6,  tier: 'violet' },
+  { id: 5,   points: 56,  type: 'transport_resources',     amount: 3000000,  time: 48, tier: 'violet' },
+  { id: 6,   points: 60,  type: 'arena_challenge',         amount: 2,        time: 6,  tier: 'violet' },
+  { id: 7,   points: 61,  type: 'transport_food',          amount: 3000000,  time: 3,  tier: 'violet' },
+  { id: 8,   points: 61,  type: 'transport_wood',          amount: 3000000,  time: 3,  tier: 'violet' },
+  { id: 9,   points: 61,  type: 'transport_stone',         amount: 600000,   time: 3,  tier: 'violet' },
+  { id: 10,  points: 61,  type: 'transport_iron',          amount: 150000,   time: 3,  tier: 'violet' },
+  { id: 11,  points: 61,  type: 'transport_resources',     amount: 12000000, time: 6,  tier: 'violet' },
+  { id: 12,  points: 65,  type: 'consume_ap',              amount: 300,      time: 24, tier: 'violet' },
+  { id: 13,  points: 66,  type: 'use_speedup_hours',       amount: 20,       time: 12, tier: 'violet' },
+  { id: 14,  points: 67,  type: 'gather_food',             amount: 1200000,  time: 48, tier: 'violet' },
+  { id: 15,  points: 67,  type: 'gather_wood',             amount: 1200000,  time: 48, tier: 'violet' },
+  { id: 16,  points: 67,  type: 'gather_stone',            amount: 240000,   time: 48, tier: 'violet' },
+  { id: 17,  points: 67,  type: 'gather_iron',             amount: 60000,    time: 48, tier: 'violet' },
+  { id: 18,  points: 67,  type: 'heal_units',              amount: 60000,    time: 12, tier: 'violet' },
+  { id: 19,  points: 68,  type: 'conduct_research',        amount: 4,        time: 12, tier: 'violet' },
+  { id: 20,  points: 71,  type: 'train_units',             amount: 75000,    time: 12, tier: 'violet' },
+  { id: 21,  points: 73,  type: 'consume_ap',              amount: 450,      time: 48, tier: 'violet' },
+  { id: 23,  points: 74,  type: 'transport_food',          amount: 6000000,  time: 9,  tier: 'violet' },
+  { id: 24,  points: 74,  type: 'transport_wood',          amount: 12000000, time: 9,  tier: 'violet' },
+  { id: 25,  points: 74,  type: 'transport_stone',         amount: 1200000,  time: 9,  tier: 'violet' },
+  { id: 26,  points: 74,  type: 'transport_iron',          amount: 300000,   time: 9,  tier: 'violet' },
+  { id: 27,  points: 76,  type: 'challenge_den',           amount: 1,        time: 12, tier: 'violet' },
+  { id: 28,  points: 78,  type: 'arena_challenge',         amount: 5,        time: 24, tier: 'violet' },
+  { id: 29,  points: 78,  type: 'use_speedup_hours',       amount: 60,       time: 24, tier: 'violet' },
+  { id: 30,  points: 80,  type: 'gather_gear_material',    amount: 200000,   time: 18, tier: 'violet' },
+  { id: 31,  points: 80,  type: 'gather_rune_material',    amount: 200000,   time: 18, tier: 'violet' },
+  { id: 32,  points: 80,  type: 'gather_totem_material',   amount: 200000,   time: 18, tier: 'violet' },
+  { id: 33,  points: 80,  type: 'gather_holystone_material', amount: 200000, time: 18, tier: 'violet' },
+  { id: 34,  points: 80,  type: 'get_hero_frag',           amount: 120000,   time: 18, tier: 'violet' },
+  { id: 35,  points: 80,  type: 'increase_bldg_might',     amount: 60000,    time: 18, tier: 'violet' },
+  { id: 36,  points: 80,  type: 'increase_troop_might',    amount: 600000,   time: 18, tier: 'violet' },
+  { id: 37,  points: 80,  type: 'increase_rsch_might',     amount: 200000,   time: 18, tier: 'violet' },
+  { id: 38,  points: 82,  type: 'gather_food',             amount: 2400000,  time: 24, tier: 'violet' },
+  { id: 39,  points: 82,  type: 'gather_wood',             amount: 2400000,  time: 24, tier: 'violet' },
+  { id: 40,  points: 82,  type: 'gather_stone',            amount: 480000,   time: 24, tier: 'violet' },
+  { id: 41,  points: 82,  type: 'gather_iron',             amount: 120000,   time: 24, tier: 'violet' },
+  { id: 42,  points: 83,  type: 'consume_alliance_coins',  amount: 40000,    time: 1,  tier: 'violet' },
+  { id: 43,  points: 84,  type: 'consume_stamina',         amount: 375,      time: 48, tier: 'violet' },
+  { id: 44,  points: 84,  type: 'black_market',            amount: 8,        time: 48, tier: 'violet' },
+  { id: 45,  points: 85,  type: 'help_allies',             amount: 35,       time: 48, tier: 'violet' },
+  { id: 46,  points: 85,  type: 'heal_units',              amount: 120000,   time: 18, tier: 'violet' },
+  { id: 47,  points: 87,  type: 'gather_resources',        amount: 3800000,  time: 6,  tier: 'violet' },
+  { id: 48,  points: 87,  type: 'transport_resources',     amount: 24000000, time: 9,  tier: 'violet' },
+
+  { id: 49,  points: 89,  type: 'gather_food',             amount: 1200000,  time: 6,  tier: 'violet' },
+  { id: 50,  points: 89,  type: 'gather_wood',             amount: 1200000,  time: 6,  tier: 'violet' },
+  { id: 51,  points: 89,  type: 'gather_stone',            amount: 240000,   time: 6,  tier: 'violet' },
+  { id: 52,  points: 89,  type: 'gather_iron',             amount: 60000,    time: 6,  tier: 'violet' },
+  { id: 54,  points: 94,  type: 'conduct_research',        amount: 6,        time: 18, tier: 'violet' },
+  { id: 55,  points: 97,  type: 'train_units',             amount: 150000,   time: 18, tier: 'violet' },
+  { id: 56,  points: 97,  type: 'challenge_den',           amount: 2,        time: 24, tier: 'violet' },
+  { id: 57,  points: 99,  type: 'consume_alliance_coins',  amount: 200000,   time: 2,  tier: 'violet' },
+  { id: 58,  points: 100, type: 'black_market',            amount: 12,       time: 72, tier: 'violet' },
+  { id: 59,  points: 100, type: 'transport_food',          amount: 12000000, time: 9,  tier: 'violet' },
+  { id: 60,  points: 100, type: 'transport_wood',          amount: 12000000, time: 9,  tier: 'violet' },
+  { id: 61,  points: 100, type: 'transport_stone',         amount: 2400000,  time: 9,  tier: 'violet' },
+  { id: 62,  points: 100, type: 'transport_iron',          amount: 600000,   time: 9,  tier: 'violet' },
+  { id: 63,  points: 100, type: 'consume_ap',              amount: 900,      time: 72, tier: 'violet' },
+  { id: 64,  points: 104, type: 'consume_stamina',         amount: 625,      time: 72, tier: 'violet' },
+  { id: 65,  points: 106, type: 'gather_food',             amount: 2400000,  time: 11, tier: 'violet' },
+  { id: 66,  points: 106, type: 'gather_wood',             amount: 2400000,  time: 11, tier: 'violet' },
+  { id: 67,  points: 106, type: 'gather_stone',            amount: 480000,   time: 11, tier: 'violet' },
+  { id: 68,  points: 106, type: 'gather_iron',             amount: 120000,   time: 11, tier: 'violet' },
+  { id: 69,  points: 110, type: 'transport_resources',     amount: 36000000, time: 12, tier: 'violet' },
+  { id: 70,  points: 113, type: 'increase_bldg_might',     amount: 120000,   time: 18, tier: 'violet' },
+  { id: 71,  points: 113, type: 'increase_troop_might',    amount: 1200000,  time: 24, tier: 'violet' },
+  { id: 72,  points: 113, type: 'increase_rsch_might',     amount: 400000,   time: 24, tier: 'violet' },
+  { id: 73,  points: 113, type: 'gather_food',             amount: 4800000,  time: 72, tier: 'violet' },
+  { id: 74,  points: 113, type: 'gather_wood',             amount: 4800000,  time: 72, tier: 'violet' },
+  { id: 75,  points: 113, type: 'gather_stone',            amount: 960000,   time: 72, tier: 'violet' },
+  { id: 76,  points: 113, type: 'gather_iron',             amount: 240000,   time: 72, tier: 'violet' },
+  { id: 77,  points: 113, type: 'gather_gear_material',    amount: 400000,   time: 24, tier: 'violet' },
+  { id: 78,  points: 113, type: 'gather_rune_material',    amount: 400000,   time: 24, tier: 'violet' },
+  { id: 79,  points: 113, type: 'gather_totem_material',   amount: 400000,   time: 24, tier: 'violet' },
+  { id: 80,  points: 113, type: 'gather_holystone_material', amount: 400000, time: 24, tier: 'violet' },
+  { id: 81,  points: 113, type: 'get_hero_frag',           amount: 240000,   time: 24, tier: 'violet' },
+  { id: 82,  points: 114, type: 'consume_diamonds',        amount: 12000,    time: 2,  tier: 'best' },
+  { id: 83,  points: 115, type: 'arena_challenge',         amount: 10,       time: 36, tier: 'best' },
+  { id: 85,  points: 118, type: 'consume_stamina',         amount: 375,      time: 12, tier: 'best' },
+  { id: 86,  points: 119, type: 'conduct_research',        amount: 8,        time: 24, tier: 'best' },
+  { id: 87,  points: 120, type: 'gather_gear_material',    amount: 200000,   time: 12, tier: 'best' },
+  { id: 88,  points: 120, type: 'gather_rune_material',    amount: 200000,   time: 12, tier: 'best' },
+  { id: 89,  points: 120, type: 'gather_totem_material',   amount: 200000,   time: 12, tier: 'best' },
+  { id: 90,  points: 120, type: 'gather_holystone_material', amount: 200000, time: 12, tier: 'best' },
+  { id: 91,  points: 120, type: 'get_hero_frag',           amount: 120000,   time: 12, tier: 'best' },
+  { id: 92,  points: 120, type: 'increase_bldg_might',     amount: 60000,    time: 12, tier: 'best' },
+  { id: 93,  points: 120, type: 'increase_troop_might',    amount: 600000,   time: 12, tier: 'best' },
+  { id: 94,  points: 120, type: 'increase_rsch_might',     amount: 200000,   time: 12, tier: 'best' },
+
+  { id: 95,  points: 121, type: 'use_speedup_hours',       amount: 200,      time: 36, tier: 'best' },
+  { id: 96,  points: 123, type: 'spend_alliance_coins',    amount: 400000,   time: 3,  tier: 'best' },
+  { id: 97,  points: 123, type: 'black_market',            amount: 8,        time: 24, tier: 'best' },
+  { id: 98,  points: 124, type: 'heal_units',              amount: 2400000,  time: 24, tier: 'red' },
+  { id: 99,  points: 126, type: 'transport_food',          amount: 18000000, time: 12, tier: 'red' },
+  { id: 100, points: 126, type: 'transport_wood',          amount: 18000000, time: 12, tier: 'red' },
+  { id: 101, points: 126, type: 'transport_stone',         amount: 3600000,  time: 12, tier: 'red' },
+  { id: 102, points: 126, type: 'transport_iron',          amount: 900000,   time: 12, tier: 'red' },
+  { id: 103, points: 127, type: 'help_allies',             amount: 35,       time: 24, tier: 'best' },
+  { id: 104, points: 132, type: 'consume_diamonds',        amount: 25000,    time: 3,  tier: 'best' },
+  { id: 105, points: 134, type: 'arena',                   amount: 12,       time: 48, tier: 'best' },
+  { id: 106, points: 134, type: 'consume_ap',              amount: 1500,     time: 96, tier: 'best' },
+  { id: 107, points: 136, type: 'consume_stamina',         amount: 1000,     time: 96, tier: 'best' },
+  { id: 108, points: 138, type: 'gather_food',             amount: 4800000,  time: 22, tier: 'best' },
+  { id: 109, points: 138, type: 'gather_wood',             amount: 4800000,  time: 22, tier: 'best' },
+  { id: 110, points: 138, type: 'gather_stone',            amount: 960000,   time: 22, tier: 'best' },
+  { id: 111, points: 138, type: 'gather_iron',             amount: 240000,   time: 22, tier: 'best' },
+  { id: 112, points: 138, type: 'train_troops',            amount: 300000,   time: 24, tier: 'red' },
+  { id: 113, points: 140, type: 'challenge_den',           amount: 4,        time: 36, tier: 'best' },
+  { id: 114, points: 143, type: 'gather_food',             amount: 7200000,  time: 72, tier: 'blue' },
+  { id: 115, points: 143, type: 'gather_wood',             amount: 7200000,  time: 72, tier: 'blue' },
+  { id: 116, points: 143, type: 'gather_stone',            amount: 1440000,  time: 72, tier: 'blue' },
+  { id: 117, points: 143, type: 'gather_iron',             amount: 360000,   time: 72, tier: 'blue' },
+  { id: 118, points: 157, type: 'use_speedup_hours',       amount: 320,      time: 48, tier: 'best' },
+  { id: 119, points: 164, type: 'help_allies',             amount: 35,       time: 48, tier: 'best' },
+  { id: 120, points: 166, type: 'spend_alliance_coins',    amount: 800000,   time: 4,  tier: 'best' },
+  { id: 122, points: 169, type: 'consume_diamonds',        amount: 50000,    time: 4,  tier: 'best' },
+  { id: 123, points: 172, type: 'gather_food',             amount: 7200000,  time: 33, tier: 'best' },
+  { id: 124, points: 172, type: 'gather_wood',             amount: 7200000,  time: 33, tier: 'best' },
+  { id: 125, points: 172, type: 'gather_stone',            amount: 1440000,  time: 33, tier: 'best' },
+  { id: 126, points: 172, type: 'gather_iron',             amount: 360000,   time: 33, tier: 'best' },
+  { id: 127, points: 175, type: 'black_market',            amount: 32,       time: 96, tier: 'best' },
+  { id: 128, points: 176, type: 'gather_gear_material',    amount: 800000,   time: 30, tier: 'best' },
+  { id: 129, points: 176, type: 'gather_rune_material',    amount: 800000,   time: 30, tier: 'best' },
+  { id: 130, points: 176, type: 'gather_totem_material',   amount: 800000,   time: 30, tier: 'best' },
+  { id: 131, points: 176, type: 'gather_holystone_material', amount: 800000, time: 30, tier: 'best' },
+  { id: 132, points: 176, type: 'increase_bldg_might',     amount: 240000,   time: 30, tier: 'best' },
+  { id: 133, points: 176, type: 'increase_troop_might',    amount: 2400000,  time: 30, tier: 'best' },
+  { id: 134, points: 176, type: 'increase_rsch_might',     amount: 800000,   time: 30, tier: 'best' },
+  { id: 135, points: 176, type: 'get_hero_frag',           amount: 480000,   time: 30, tier: 'best' },
+  { id: 136, points: 184, type: 'challenge_den',           amount: 6,        time: 48, tier: 'best' },
+  { id: 137, points: 240, type: 'get_hero_frag',           amount: 1000000,  time: null, tier: 'best' },
+  { id: 138, points: 240, type: 'gain_troop_power',        amount: 3250000,  time: null, tier: 'best' },
+  { id: 139, points: 240, type: 'use_speedup_hours',       amount: 480,      time: null, tier: 'best' },
+  { id: 140, points: 240, type: 'increase_rsch_might',     amount: null,     time: null, tier: 'red' },
+];
+
+const I18N = {
+  en: {
+    title: "Quest Value Finder",
+    subtitle: "Pick your quest points to see which tasks are available and which are worth doing.",
+    enter_points: "Or select quest points",
+    search_label: "Search by keyword",
+    search_placeholder: "hero, research, food...",
+    search_results_for: "result(s) for “{q}”",
+    no_search_results: "No tasks match “{q}”.",
+    points_short: "pts",
+    hint_pick: "Search above, or pick a point value to see matching tasks.",
+    no_results: "No tasks for {points} points.",
+    no_results_hint: "Use \"+ Add task\" to add one.",
+    tasks_for: "task(s) for {points} points",
+    found_n: "Found {n} task(s) for {points} points",
+    legend_title: "Legend",
+    tier_best: "Take it!",
+    tier_blue: "Has better equivalent",
+    tier_violet: "Bad task",
+    tier_red: "Reset",
+    tier_best_desc: "good value, take this quest",
+    tier_blue_desc: "a similar quest at higher points takes less time",
+    tier_violet_desc: "low value, avoid if possible",
+    tier_red_desc: "should be reset, better quests available",
+    amount_label: "Amount",
+    time_label: "Time (hours)",
+    points_label: "Points",
+    tier_label: "Tier",
+    type_label: "Task type",
+    custom_label_label: "Custom task name",
+    description_label: "Description",
+    needed_label: "Needed (requirements)",
+    edit_btn: "Edit",
+    save_btn: "Save",
+    cancel_btn: "Cancel",
+    delete_btn: "Delete",
+    add_task_btn: "+ Add task",
+    export_btn: "Export",
+    import_btn: "Import",
+    modal_edit_title: "Edit task",
+    modal_add_title: "Add new task",
+    info_local: "Edits and added tasks are saved in your browser only. Use Export to back them up or share them with someone who can add them to the source.",
+    hours_unit: "h",
+    custom_type: "Custom",
+    type_transport_resources: "Transport Resources",
+    type_transport_food: "Transport Food",
+    type_transport_wood: "Transport Wood",
+    type_transport_stone: "Transport Stone",
+    type_transport_iron: "Transport Iron",
+    type_arena_challenge: "Arena Challenge",
+    type_arena: "Arena",
+    type_heal_units: "Heal Units",
+    type_train_units: "Train Soldiers",
+    type_train_troops: "Train Troops",
+    type_consume_ap: "Consume AP",
+    type_consume_stamina: "Consume Stamina",
+    type_consume_alliance_coins: "Consume Alliance Coins",
+    type_consume_diamonds: "Consume Diamonds",
+    type_spend_alliance_coins: "Spend Alliance Coins",
+    type_use_speedup_hours: "Use Speedup Hours",
+    type_gather_food: "Gather Food",
+    type_gather_wood: "Gather Wood",
+    type_gather_stone: "Gather Stone",
+    type_gather_iron: "Gather Iron",
+    type_gather_resources: "Gather Resources",
+    type_gather_gear_material: "Gather Gear Material",
+    type_gather_rune_material: "Gather Rune Material",
+    type_gather_totem_material: "Gather Totem Material",
+    type_gather_holystone_material: "Gather Holystone Material",
+    type_get_hero_frag: "Get Hero Fragment",
+    type_gain_troop_power: "Gain Troop Power",
+    type_increase_bldg_might: "Increase Building Might",
+    type_increase_troop_might: "Increase Troop Might",
+    type_increase_rsch_might: "Increase Research Might",
+    type_conduct_research: "Conduct Research",
+    type_challenge_den: "Challenge Den",
+    type_black_market: "Black Market",
+    type_help_allies: "Help Allies",
+  },
+  de: {
+    title: "Quest-Wert-Finder",
+    subtitle: "Wähle deine Quest-Punkte, um zu sehen, welche Aufgaben verfügbar sind und welche sich lohnen.",
+    enter_points: "Oder Punktzahl wählen",
+    search_label: "Nach Stichwort suchen",
+    search_placeholder: "Hero, Research, Food…",
+    search_results_for: "Treffer für „{q}\"",
+    no_search_results: "Keine Aufgaben passen zu „{q}\".",
+    points_short: "Pkt",
+    hint_pick: "Suche oben oder wähle eine Punktzahl, um passende Aufgaben zu sehen.",
+    no_results: "Keine Aufgaben mit {points} Punkten.",
+    no_results_hint: "Mit „+ Aufgabe hinzufügen\" kannst du eine eintragen.",
+    tasks_for: "Aufgabe(n) mit {points} Punkten",
+    found_n: "{n} Aufgabe(n) mit {points} Punkten gefunden",
+    legend_title: "Legende",
+    tier_best: "Nimm sie!",
+    tier_blue: "Bessere Variante vorhanden",
+    tier_violet: "Schlechte Aufgabe",
+    tier_red: "Resetten",
+    tier_best_desc: "gutes Verhältnis, nimm diese Aufgabe",
+    tier_blue_desc: "ähnliche Aufgabe bei höheren Punkten dauert kürzer",
+    tier_violet_desc: "niedriger Wert, möglichst vermeiden",
+    tier_red_desc: "sollte resettet werden, bessere Aufgaben verfügbar",
+    amount_label: "Menge",
+    time_label: "Zeit (Stunden)",
+    points_label: "Punkte",
+    tier_label: "Tier",
+    type_label: "Aufgabentyp",
+    custom_label_label: "Eigener Aufgabenname",
+    description_label: "Beschreibung",
+    needed_label: "Benötigt (Voraussetzungen)",
+    edit_btn: "Bearbeiten",
+    save_btn: "Speichern",
+    cancel_btn: "Abbrechen",
+    delete_btn: "Löschen",
+    add_task_btn: "+ Aufgabe hinzufügen",
+    export_btn: "Exportieren",
+    import_btn: "Importieren",
+    modal_edit_title: "Aufgabe bearbeiten",
+    modal_add_title: "Neue Aufgabe",
+    info_local: "Bearbeitungen und neue Aufgaben werden nur in deinem Browser gespeichert. Mit Export kannst du sie sichern oder weitergeben.",
+    hours_unit: "Std",
+    custom_type: "Eigene",
+    type_transport_resources: "Ressourcen transportieren",
+    type_transport_food: "Nahrung transportieren",
+    type_transport_wood: "Holz transportieren",
+    type_transport_stone: "Stein transportieren",
+    type_transport_iron: "Eisen transportieren",
+    type_arena_challenge: "Arena-Herausforderung",
+    type_arena: "Arena",
+    type_heal_units: "Einheiten heilen",
+    type_train_units: "Soldaten ausbilden",
+    type_train_troops: "Truppen ausbilden",
+    type_consume_ap: "AP verbrauchen",
+    type_consume_stamina: "Stamina verbrauchen",
+    type_consume_alliance_coins: "Allianz-Münzen verbrauchen",
+    type_consume_diamonds: "Diamanten verbrauchen",
+    type_spend_alliance_coins: "Allianz-Münzen ausgeben",
+    type_use_speedup_hours: "Beschleunigung verwenden",
+    type_gather_food: "Nahrung sammeln",
+    type_gather_wood: "Holz sammeln",
+    type_gather_stone: "Stein sammeln",
+    type_gather_iron: "Eisen sammeln",
+    type_gather_resources: "Ressourcen sammeln",
+    type_gather_gear_material: "Ausrüstungsmaterial sammeln",
+    type_gather_rune_material: "Runenmaterial sammeln",
+    type_gather_totem_material: "Totemmaterial sammeln",
+    type_gather_holystone_material: "Heiliger-Stein-Material sammeln",
+    type_get_hero_frag: "Helden-Fragmente sammeln",
+    type_gain_troop_power: "Truppenmacht gewinnen",
+    type_increase_bldg_might: "Gebäude-Macht erhöhen",
+    type_increase_troop_might: "Truppen-Macht erhöhen",
+    type_increase_rsch_might: "Forschungs-Macht erhöhen",
+    type_conduct_research: "Forschen",
+    type_challenge_den: "Höhle herausfordern",
+    type_black_market: "Schwarzmarkt",
+    type_help_allies: "Verbündeten helfen",
+  },
+  es: {
+    title: "Buscador de Valor de Misiones",
+    subtitle: "Introduce tus puntos de misión para ver qué tareas están disponibles y cuáles valen la pena.",
+    enter_points: "Introduce tus puntos de misión",
+    no_results: "No hay tareas para {points} puntos. ¿Añadir una?",
+    found_n: "Se encontraron {n} tarea(s) para {points} puntos",
+    legend_title: "Leyenda",
+    tier_best: "Mejor",
+    tier_blue: "Hay equivalente más corto",
+    tier_violet: "Saltar",
+    tier_red: "Reiniciar",
+    tier_best_desc: "buena relación valor/puntos",
+    tier_blue_desc: "una misión similar con más puntos tarda menos",
+    tier_violet_desc: "generalmente no vale la pena",
+    tier_red_desc: "debería reiniciarse, hay mejores misiones",
+    amount_label: "Cantidad", time_label: "Tiempo (horas)", points_label: "Puntos", tier_label: "Nivel",
+    type_label: "Tipo de tarea", custom_label_label: "Nombre personalizado",
+    description_label: "Descripción", needed_label: "Necesario (requisitos)",
+    edit_btn: "Editar", save_btn: "Guardar", cancel_btn: "Cancelar", delete_btn: "Eliminar",
+    add_task_btn: "+ Añadir tarea", export_btn: "Exportar", import_btn: "Importar",
+    modal_edit_title: "Editar tarea", modal_add_title: "Añadir nueva tarea",
+    info_local: "Las ediciones y tareas añadidas se guardan solo en tu navegador. Usa Exportar para hacer copia o compartirlas.",
+    hours_unit: "h", custom_type: "Personalizado",
+  },
+  it: {
+    title: "Trova Valore Missione",
+    subtitle: "Inserisci i punti missione per vedere quali compiti sono disponibili e quali valgono la pena.",
+    enter_points: "Inserisci i punti missione",
+    no_results: "Nessun compito per {points} punti. Vuoi aggiungerne uno?",
+    found_n: "{n} compito/i trovato/i per {points} punti",
+    legend_title: "Legenda",
+    tier_best: "Ottimo",
+    tier_blue: "Esiste equivalente più rapido",
+    tier_violet: "Saltare",
+    tier_red: "Resettare",
+    tier_best_desc: "buon rapporto valore/punti",
+    tier_blue_desc: "una missione simile a punti più alti dura meno",
+    tier_violet_desc: "in genere non vale lo sforzo",
+    tier_red_desc: "andrebbe resettata, ce ne sono di migliori",
+    amount_label: "Quantità", time_label: "Tempo (ore)", points_label: "Punti", tier_label: "Livello",
+    type_label: "Tipo di compito", custom_label_label: "Nome personalizzato",
+    description_label: "Descrizione", needed_label: "Necessario (requisiti)",
+    edit_btn: "Modifica", save_btn: "Salva", cancel_btn: "Annulla", delete_btn: "Elimina",
+    add_task_btn: "+ Aggiungi compito", export_btn: "Esporta", import_btn: "Importa",
+    modal_edit_title: "Modifica compito", modal_add_title: "Aggiungi nuovo compito",
+    info_local: "Le modifiche e i compiti aggiunti vengono salvati solo nel browser. Usa Esporta per backup o condivisione.",
+    hours_unit: "h", custom_type: "Personalizzato",
+  },
+  ru: {
+    title: "Поиск ценности квестов",
+    subtitle: "Введите очки квеста, чтобы увидеть доступные задачи и понять, какие стоят усилий.",
+    enter_points: "Введите очки квеста",
+    no_results: "Нет задач на {points} очков. Может, добавить?",
+    found_n: "Найдено {n} задач(и) на {points} очков",
+    legend_title: "Легенда",
+    tier_best: "Лучшие",
+    tier_blue: "Есть более короткий аналог",
+    tier_violet: "Пропустить",
+    tier_red: "Сбросить",
+    tier_best_desc: "хорошее соотношение значение/очки",
+    tier_blue_desc: "похожий квест на больше очков занимает меньше времени",
+    tier_violet_desc: "обычно не стоит усилий",
+    tier_red_desc: "следует сбросить, есть лучше",
+    amount_label: "Количество", time_label: "Время (часы)", points_label: "Очки", tier_label: "Уровень",
+    type_label: "Тип задачи", custom_label_label: "Название",
+    description_label: "Описание", needed_label: "Требуется",
+    edit_btn: "Изменить", save_btn: "Сохранить", cancel_btn: "Отмена", delete_btn: "Удалить",
+    add_task_btn: "+ Добавить задачу", export_btn: "Экспорт", import_btn: "Импорт",
+    modal_edit_title: "Изменить задачу", modal_add_title: "Новая задача",
+    info_local: "Изменения и добавленные задачи сохраняются только в вашем браузере. Используйте Экспорт для резервной копии.",
+    hours_unit: "ч", custom_type: "Своё",
+  },
+  uk: {
+    title: "Пошук цінності квестів",
+    subtitle: "Введіть очки квесту, щоб побачити доступні завдання та які з них варті зусиль.",
+    enter_points: "Введіть очки квесту",
+    no_results: "Немає завдань на {points} очок. Додати?",
+    found_n: "Знайдено {n} завдан(ня) на {points} очок",
+    legend_title: "Легенда",
+    tier_best: "Найкращі",
+    tier_blue: "Є коротший аналог",
+    tier_violet: "Пропустити",
+    tier_red: "Скинути",
+    tier_best_desc: "хороше співвідношення цінність/очки",
+    tier_blue_desc: "схожий квест за більше очок займає менше часу",
+    tier_violet_desc: "зазвичай не вартий зусиль",
+    tier_red_desc: "слід скинути, є кращі",
+    amount_label: "Кількість", time_label: "Час (години)", points_label: "Очки", tier_label: "Рівень",
+    type_label: "Тип завдання", custom_label_label: "Назва",
+    description_label: "Опис", needed_label: "Потрібно",
+    edit_btn: "Редагувати", save_btn: "Зберегти", cancel_btn: "Скасувати", delete_btn: "Видалити",
+    add_task_btn: "+ Додати завдання", export_btn: "Експорт", import_btn: "Імпорт",
+    modal_edit_title: "Редагувати завдання", modal_add_title: "Нове завдання",
+    info_local: "Зміни та додані завдання зберігаються лише у вашому браузері. Використовуйте Експорт для резервної копії.",
+    hours_unit: "г", custom_type: "Власне",
+  },
+  tr: {
+    title: "Görev Değer Bulucu",
+    subtitle: "Görev puanlarınızı girin ve hangi görevlerin mevcut olduğunu, hangilerinin değdiğini görün.",
+    enter_points: "Görev puanlarınızı girin",
+    no_results: "{points} puan için görev yok. Eklemek ister misiniz?",
+    found_n: "{points} puan için {n} görev bulundu",
+    legend_title: "Açıklama",
+    tier_best: "En iyi",
+    tier_blue: "Daha kısa eşdeğeri var",
+    tier_violet: "Atla",
+    tier_red: "Sıfırla",
+    tier_best_desc: "iyi puan değeri",
+    tier_blue_desc: "daha yüksek puanlı benzer görev daha kısa sürer",
+    tier_violet_desc: "genellikle değmez",
+    tier_red_desc: "sıfırlanmalı, daha iyileri var",
+    amount_label: "Miktar", time_label: "Süre (saat)", points_label: "Puan", tier_label: "Seviye",
+    type_label: "Görev türü", custom_label_label: "Özel görev adı",
+    description_label: "Açıklama", needed_label: "Gerekli",
+    edit_btn: "Düzenle", save_btn: "Kaydet", cancel_btn: "İptal", delete_btn: "Sil",
+    add_task_btn: "+ Görev ekle", export_btn: "Dışa aktar", import_btn: "İçe aktar",
+    modal_edit_title: "Görev düzenle", modal_add_title: "Yeni görev",
+    info_local: "Düzenlemeler ve eklenen görevler yalnızca tarayıcınızda saklanır. Yedeklemek için Dışa aktar'ı kullanın.",
+    hours_unit: "s", custom_type: "Özel",
+  },
+  el: {
+    title: "Εύρεση Αξίας Αποστολών",
+    subtitle: "Εισάγετε τους πόντους αποστολής για να δείτε ποιες εργασίες είναι διαθέσιμες και ποιες αξίζουν.",
+    enter_points: "Εισάγετε τους πόντους αποστολής",
+    no_results: "Καμία εργασία για {points} πόντους. Να προστεθεί;",
+    found_n: "Βρέθηκαν {n} εργασία(ες) για {points} πόντους",
+    legend_title: "Υπόμνημα",
+    tier_best: "Καλύτερες",
+    tier_blue: "Υπάρχει συντομότερο αντίστοιχο",
+    tier_violet: "Παράλειψη",
+    tier_red: "Επαναφορά",
+    tier_best_desc: "καλή σχέση αξίας/πόντων",
+    tier_blue_desc: "παρόμοια αποστολή σε υψηλότερους πόντους είναι συντομότερη",
+    tier_violet_desc: "γενικά δεν αξίζει τον κόπο",
+    tier_red_desc: "πρέπει να γίνει reset, υπάρχουν καλύτερες",
+    amount_label: "Ποσότητα", time_label: "Χρόνος (ώρες)", points_label: "Πόντοι", tier_label: "Επίπεδο",
+    type_label: "Τύπος εργασίας", custom_label_label: "Όνομα",
+    description_label: "Περιγραφή", needed_label: "Απαιτείται",
+    edit_btn: "Επεξεργασία", save_btn: "Αποθήκευση", cancel_btn: "Άκυρο", delete_btn: "Διαγραφή",
+    add_task_btn: "+ Προσθήκη", export_btn: "Εξαγωγή", import_btn: "Εισαγωγή",
+    modal_edit_title: "Επεξεργασία εργασίας", modal_add_title: "Νέα εργασία",
+    info_local: "Οι αλλαγές αποθηκεύονται μόνο στον φυλλομετρητή σας. Χρησιμοποιήστε Εξαγωγή για αντίγραφο ασφαλείας.",
+    hours_unit: "ώ", custom_type: "Προσαρμοσμένο",
+  },
+};
+
+const INITIAL_OVERRIDES = {
+  taskOverrides: {},
+  customTasks: []
+};
+
+const STORAGE_KEY = 'qf_overrides_v1';
+const LANG_KEY = 'qf_lang';
+const TIER_ORDER = { best: 0, blue: 1, violet: 2, red: 3 };
+
+function safeGet(key) {
+  try { return localStorage.getItem(key); } catch { return null; }
+}
+function safeSet(key, value) {
+  try { localStorage.setItem(key, value); } catch {}
+}
+
+let currentLang = safeGet(LANG_KEY) || 'en';
+if (!I18N[currentLang]) currentLang = 'en';
+
+let overrides = loadOverrides();
+let editingTask = null;
+let selectedPoints = null;
+let searchQuery = '';
+const SELECTED_KEY = 'qf_selected';
+
+function loadOverrides() {
+  const base = {
+    taskOverrides: { ...(INITIAL_OVERRIDES.taskOverrides || {}) },
+    customTasks: Array.isArray(INITIAL_OVERRIDES.customTasks) ? [...INITIAL_OVERRIDES.customTasks] : [],
+  };
+  try {
+    const raw = safeGet(STORAGE_KEY);
+    if (!raw) return base;
+    const parsed = JSON.parse(raw);
+    const userOvr = parsed.taskOverrides || {};
+    const userCustom = Array.isArray(parsed.customTasks) ? parsed.customTasks : [];
+    const customsMap = new Map();
+    for (const t of base.customTasks) customsMap.set(String(t.id), t);
+    for (const t of userCustom) customsMap.set(String(t.id), t);
+    return {
+      taskOverrides: { ...base.taskOverrides, ...userOvr },
+      customTasks: [...customsMap.values()],
+    };
+  } catch {
+    return base;
+  }
+}
+
+function saveOverrides() {
+  safeSet(STORAGE_KEY, JSON.stringify(overrides));
+}
+
+function t(key, vars) {
+  const langDict = I18N[currentLang] || {};
+  let str = langDict[key] || I18N.en[key] || key;
+  if (vars) {
+    str = str.replace(/\{(\w+)\}/g, (_, k) => (vars[k] !== undefined ? vars[k] : ''));
+  }
+  return str;
+}
+
+function typeLabel(task) {
+  if (task.typeLabel && typeof task.typeLabel === 'object') {
+    return task.typeLabel[currentLang] || task.typeLabel.en || t('custom_type');
+  }
+  const key = 'type_' + task.type;
+  return t(key);
+}
+
+function localized(field, task) {
+  const v = task[field];
+  if (!v) return '';
+  if (typeof v === 'string') return v;
+  return v[currentLang] || v.en || Object.values(v).find(Boolean) || '';
+}
+
+function effective(task) {
+  const ovr = overrides.taskOverrides[task.id];
+  if (!ovr) return { ...task };
+  return { ...task, ...ovr };
+}
+
+function allTasks() {
+  return [...TASKS.map(effective), ...overrides.customTasks.map(effective)];
+}
+
+function formatAmount(n) {
+  if (typeof n !== 'number') n = Number(n);
+  if (!Number.isFinite(n)) return '';
+  return n.toLocaleString(currentLang);
+}
+
+function applyStaticI18n() {
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    el.textContent = t(el.dataset.i18n);
+  });
+  document.documentElement.lang = currentLang;
+  document.title = t('title');
+}
+
+function getPointsGroups() {
+  const map = new Map();
+  for (const task of allTasks()) {
+    const p = Number(task.points);
+    if (!Number.isFinite(p)) continue;
+    map.set(p, (map.get(p) || 0) + 1);
+  }
+  return [...map.entries()].sort((a, b) => a[0] - b[0]);
+}
+
+function renderPointsGrid() {
+  const grid = document.getElementById('points-grid');
+  const groups = getPointsGroups();
+  grid.innerHTML = groups.map(([p, count]) => (
+    '<div class="chip">' +
+      '<input type="radio" name="points" id="p-' + p + '" value="' + p + '"' +
+        (selectedPoints === p ? ' checked' : '') + '>' +
+      '<label for="p-' + p + '">' + p +
+        '<span class="chip-count">' + count + '</span>' +
+      '</label>' +
+    '</div>'
+  )).join('');
+  grid.querySelectorAll('input[name="points"]').forEach(inp => {
+    inp.addEventListener('change', () => {
+      selectedPoints = Number(inp.value);
+      safeSet(SELECTED_KEY, String(selectedPoints));
+      if (searchQuery) {
+        searchQuery = '';
+        const searchEl = document.getElementById('search-input');
+        if (searchEl) searchEl.value = '';
+      }
+      renderResults();
+    });
+  });
+}
+
+function matchesSearch(task, query) {
+  if (!query) return true;
+  const q = query.toLowerCase();
+  const name = (typeLabel(task) || '').toLowerCase();
+  if (name.includes(q)) return true;
+  const typeKey = (task.type || '').toLowerCase();
+  if (typeKey.includes(q)) return true;
+  const desc = (localized('description', task) || '').toLowerCase();
+  if (desc.includes(q)) return true;
+  const need = (localized('needed', task) || '').toLowerCase();
+  if (need.includes(q)) return true;
+  return false;
+}
+
+function renderResults() {
+  const results = document.getElementById('results');
+
+  if (searchQuery) {
+    const matches = allTasks()
+      .filter(task => matchesSearch(task, searchQuery))
+      .sort((a, b) => {
+        const tt = (TIER_ORDER[a.tier] ?? 9) - (TIER_ORDER[b.tier] ?? 9);
+        if (tt !== 0) return tt;
+        return (Number(b.points) || 0) - (Number(a.points) || 0);
+      });
+    if (matches.length === 0) {
+      results.innerHTML = '<div class="empty">' + escapeHtml(t('no_search_results', { q: searchQuery })) + '</div>';
+      return;
+    }
+    const headerHtml = '<div class="results-header"><span><strong>' + matches.length + '</strong> ' +
+      escapeHtml(t('search_results_for', { q: searchQuery })) + '</span></div>';
+    const tasksHtml = matches.map(task => renderTask(task, true)).join('');
+    results.innerHTML = headerHtml + tasksHtml;
+    bindTaskActions(results);
+    return;
+  }
+
+  if (selectedPoints === null) {
+    results.innerHTML = '<div class="empty">' + t('hint_pick') + '</div>';
+    return;
+  }
+  const matches = allTasks()
+    .filter(task => Number(task.points) === selectedPoints)
+    .sort((a, b) => {
+      const tt = (TIER_ORDER[a.tier] ?? 9) - (TIER_ORDER[b.tier] ?? 9);
+      if (tt !== 0) return tt;
+      return (a.time || 0) - (b.time || 0) || (a.amount || 0) - (b.amount || 0);
+    });
+  if (matches.length === 0) {
+    results.innerHTML = '<div class="empty">' + escapeHtml(t('no_results', { points: selectedPoints })) +
+      '<span class="empty-hint">' + escapeHtml(t('no_results_hint')) + '</span></div>';
+    return;
+  }
+  const headerHtml = '<div class="results-header"><span><strong>' + matches.length + '</strong> ' +
+    escapeHtml(t('tasks_for', { points: selectedPoints })) + '</span></div>';
+  const tasksHtml = matches.map(task => renderTask(task, false)).join('');
+  results.innerHTML = headerHtml + tasksHtml;
+  bindTaskActions(results);
+}
+
+function bindTaskActions(container) {
+  container.querySelectorAll('[data-edit-id]').forEach(btn => {
+    btn.addEventListener('click', () => openEdit(btn.dataset.editId));
+  });
+}
+
+function render() {
+  applyStaticI18n();
+  renderPointsGrid();
+  renderResults();
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+}
+
+function renderTask(task, showPoints) {
+  const tier = TIERS.includes(task.tier) ? task.tier : 'best';
+  const name = escapeHtml(typeLabel(task));
+  const amount = task.amount === null || task.amount === undefined || task.amount === '' ? '?' : escapeHtml(formatAmount(task.amount));
+  const time = task.time === null || task.time === undefined || task.time === '' ? '?' : escapeHtml(String(task.time)) + t('hours_unit');
+  const pointsBadge = showPoints ? '<span class="points-pill">' + escapeHtml(String(task.points)) + ' ' + escapeHtml(t('points_short')) + '</span>' : '';
+  const desc = escapeHtml(localized('description', task));
+  const need = escapeHtml(localized('needed', task));
+  let extras = '';
+  if (desc) extras += '<div class="task-extra">' + desc + '</div>';
+  if (need) extras += '<div class="task-extra"><span class="label">' + escapeHtml(t('needed_label')) + ':</span> ' + need + '</div>';
+  return (
+    '<div class="task tier-' + tier + '">' +
+      '<div class="task-row">' +
+        '<span class="task-name">' + name + '</span>' +
+        '<span class="tier-badge">' + escapeHtml(t('tier_' + tier)) + '</span>' +
+      '</div>' +
+      '<div class="task-row">' +
+        pointsBadge +
+        '<span class="task-meta amount">◆ ' + amount + '</span>' +
+        '<span class="task-meta">⏱ ' + time + '</span>' +
+      '</div>' +
+      extras +
+      '<div class="task-actions">' +
+        '<button class="icon-btn" data-edit-id="' + escapeHtml(String(task.id)) + '">' + escapeHtml(t('edit_btn')) + '</button>' +
+      '</div>' +
+    '</div>'
+  );
+}
+
+function findTask(id) {
+  const base = TASKS.find(x => String(x.id) === String(id));
+  if (base) return { base, isCustom: false };
+  const custom = overrides.customTasks.find(x => String(x.id) === String(id));
+  if (custom) return { base: custom, isCustom: true };
+  return null;
+}
+
+function openEdit(id) {
+  const found = findTask(id);
+  if (!found) return;
+  const baseTask = found.base;
+  const ovr = !found.isCustom ? (overrides.taskOverrides[id] || {}) : {};
+  const eff = found.isCustom ? baseTask : { ...baseTask, ...ovr };
+  editingTask = { id, isCustom: found.isCustom, isNew: false };
+
+  const form = document.getElementById('edit-form');
+  form.points.value = eff.points;
+  form.time.value = eff.time;
+  form.amount.value = eff.amount;
+  form.tier.value = eff.tier || 'best';
+
+  populateTypeSelect(form.typeKey, eff.type, found.isCustom);
+  toggleCustomLabel(form, eff.type === 'custom');
+  form.customLabel.value = (eff.typeLabel && (eff.typeLabel[currentLang] || eff.typeLabel.en)) || '';
+
+  form.description.value = localized('description', eff);
+  form.needed.value = localized('needed', eff);
+
+  document.getElementById('edit-title').textContent = t('modal_edit_title');
+  document.getElementById('delete-btn').hidden = !found.isCustom;
+  document.querySelectorAll('.lang-tag').forEach(el => el.textContent = '(' + currentLang.toUpperCase() + ')');
+  document.getElementById('edit-dialog').showModal();
+}
+
+function openAdd() {
+  editingTask = { id: null, isCustom: true, isNew: true };
+  const form = document.getElementById('edit-form');
+  form.points.value = selectedPoints !== null ? selectedPoints : '';
+  form.time.value = '';
+  form.amount.value = '';
+  form.tier.value = 'best';
+  populateTypeSelect(form.typeKey, 'custom', true);
+  toggleCustomLabel(form, true);
+  form.customLabel.value = '';
+  form.description.value = '';
+  form.needed.value = '';
+  document.getElementById('edit-title').textContent = t('modal_add_title');
+  document.getElementById('delete-btn').hidden = true;
+  document.querySelectorAll('.lang-tag').forEach(el => el.textContent = '(' + currentLang.toUpperCase() + ')');
+  document.getElementById('edit-dialog').showModal();
+}
+
+function populateTypeSelect(select, currentValue, includeCustom) {
+  select.innerHTML = '';
+  TASK_TYPES.forEach(tk => {
+    const opt = new Option(t('type_' + tk), tk);
+    select.appendChild(opt);
+  });
+  if (includeCustom) {
+    select.appendChild(new Option(t('custom_type'), 'custom'));
+  }
+  select.value = currentValue;
+  if (select.value !== currentValue && currentValue) {
+    select.appendChild(new Option(currentValue, currentValue));
+    select.value = currentValue;
+  }
+}
+
+function toggleCustomLabel(form, show) {
+  document.getElementById('custom-label-field').hidden = !show;
+}
+
+function handleTypeChange(e) {
+  const form = document.getElementById('edit-form');
+  toggleCustomLabel(form, e.target.value === 'custom');
+}
+
+function handleSave(e) {
+  e.preventDefault();
+  const form = document.getElementById('edit-form');
+  const parseOptional = v => (v === '' || v === null || v === undefined) ? null : Number(v);
+  const data = {
+    points: Number(form.points.value),
+    time: parseOptional(form.time.value),
+    amount: parseOptional(form.amount.value),
+    tier: form.tier.value,
+    type: form.typeKey.value,
+  };
+  if (data.type === 'custom') {
+    data.typeLabel = data.typeLabel || {};
+  }
+  const desc = form.description.value.trim();
+  const need = form.needed.value.trim();
+
+  if (editingTask.isNew) {
+    const id = 'c_' + Date.now();
+    const newTask = { id, ...data };
+    if (data.type === 'custom') {
+      newTask.typeLabel = { [currentLang]: form.customLabel.value.trim() };
+    }
+    if (desc) newTask.description = { [currentLang]: desc };
+    if (need) newTask.needed = { [currentLang]: need };
+    overrides.customTasks.push(newTask);
+  } else if (editingTask.isCustom) {
+    const task = overrides.customTasks.find(x => String(x.id) === String(editingTask.id));
+    if (task) {
+      Object.assign(task, data);
+      if (data.type === 'custom') {
+        task.typeLabel = task.typeLabel || {};
+        task.typeLabel[currentLang] = form.customLabel.value.trim();
+      } else {
+        delete task.typeLabel;
+      }
+      task.description = mergeLocalized(task.description, currentLang, desc);
+      task.needed = mergeLocalized(task.needed, currentLang, need);
+    }
+  } else {
+    const id = editingTask.id;
+    const base = TASKS.find(x => String(x.id) === String(id));
+    const ovr = overrides.taskOverrides[id] || {};
+    Object.keys(data).forEach(k => {
+      if (data[k] !== base[k]) ovr[k] = data[k];
+      else delete ovr[k];
+    });
+    ovr.description = mergeLocalized(ovr.description, currentLang, desc);
+    ovr.needed = mergeLocalized(ovr.needed, currentLang, need);
+    if (Object.keys(ovr).length === 0) delete overrides.taskOverrides[id];
+    else overrides.taskOverrides[id] = ovr;
+  }
+
+  saveOverrides();
+  document.getElementById('edit-dialog').close();
+  render();
+}
+
+function mergeLocalized(existing, lang, value) {
+  const obj = (existing && typeof existing === 'object') ? { ...existing } : {};
+  if (value) obj[lang] = value;
+  else delete obj[lang];
+  return Object.keys(obj).length === 0 ? undefined : obj;
+}
+
+function handleDelete() {
+  if (!editingTask || !editingTask.isCustom || editingTask.isNew) return;
+  overrides.customTasks = overrides.customTasks.filter(x => String(x.id) !== String(editingTask.id));
+  saveOverrides();
+  document.getElementById('edit-dialog').close();
+  render();
+}
+
+function handleExport() {
+  const blob = new Blob([JSON.stringify(overrides, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'quest-finder-overrides.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function handleImport(file) {
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const parsed = JSON.parse(reader.result);
+      if (typeof parsed !== 'object' || parsed === null) throw new Error('bad json');
+      overrides = {
+        taskOverrides: parsed.taskOverrides || {},
+        customTasks: Array.isArray(parsed.customTasks) ? parsed.customTasks : [],
+      };
+      saveOverrides();
+      render();
+    } catch (err) {
+      alert('Import failed: ' + err.message);
+    }
+  };
+  reader.readAsText(file);
+}
+
+function initLangSelect() {
+  const sel = document.getElementById('lang');
+  LANGS.forEach(l => sel.appendChild(new Option(l.name, l.code)));
+  sel.value = currentLang;
+  sel.addEventListener('change', () => {
+    currentLang = sel.value;
+    safeSet(LANG_KEY, currentLang);
+    render();
+  });
+}
+
+function init() {
+  initLangSelect();
+  const savedPoints = safeGet(SELECTED_KEY);
+  if (savedPoints !== null && savedPoints !== '') {
+    const n = Number(savedPoints);
+    if (Number.isFinite(n)) selectedPoints = n;
+  }
+  const searchEl = document.getElementById('search-input');
+  searchEl.addEventListener('input', () => {
+    searchQuery = searchEl.value.trim();
+    renderResults();
+  });
+  document.getElementById('add-btn').addEventListener('click', openAdd);
+  document.getElementById('export-btn').addEventListener('click', handleExport);
+  document.getElementById('import-btn').addEventListener('click', () => document.getElementById('import-file').click());
+  document.getElementById('import-file').addEventListener('change', e => {
+    if (e.target.files[0]) handleImport(e.target.files[0]);
+    e.target.value = '';
+  });
+  document.getElementById('edit-form').addEventListener('submit', handleSave);
+  document.getElementById('edit-form').elements['typeKey'].addEventListener('change', handleTypeChange);
+  document.getElementById('cancel-btn').addEventListener('click', () => document.getElementById('edit-dialog').close());
+  document.getElementById('delete-btn').addEventListener('click', handleDelete);
+  render();
+}
+
+init();
+</script>
+</body>
+</html>
