@@ -105,6 +105,57 @@
     box-shadow: var(--shadow);
     cursor: pointer;
   }
+  .owner-btn {
+    font: inherit;
+    font-size: 0.85rem;
+    padding: 8px 12px;
+    border: 1px solid var(--border-strong);
+    background: var(--card);
+    color: var(--muted);
+    border-radius: 10px;
+    box-shadow: var(--shadow);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .owner-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .owner-btn.on {
+    background: var(--accent-soft);
+    color: var(--accent);
+    border-color: var(--accent);
+    font-weight: 600;
+  }
+
+  .tier-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 2px;
+    padding-top: 8px;
+    border-top: 1px dashed rgba(0,0,0,0.08);
+  }
+  @media (prefers-color-scheme: dark) {
+    .tier-chips { border-top-color: rgba(255,255,255,0.08); }
+  }
+  .tier-chip {
+    font: inherit;
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 3px 9px;
+    border: 1.5px solid transparent;
+    border-radius: 999px;
+    cursor: pointer;
+    background: var(--card);
+    opacity: 0.55;
+    transition: opacity 0.12s, border-color 0.12s, transform 0.12s;
+  }
+  .tier-chip:hover { opacity: 1; transform: translateY(-1px); }
+  .tier-chip.active { opacity: 1; border-color: currentColor; }
+  .tier-chip.chip-best   { color: var(--tier-best); }
+  .tier-chip.chip-blue   { color: var(--tier-blue); }
+  .tier-chip.chip-violet { color: var(--tier-violet); }
+  .tier-chip.chip-red    { color: var(--tier-red); }
 
   .card {
     background: var(--card);
@@ -429,6 +480,7 @@
       <p data-i18n="subtitle">Enter your quest points to see which tasks are available and which are worth doing.</p>
     </div>
     <select id="lang" class="lang-select" aria-label="Language"></select>
+    <button id="owner-btn" class="owner-btn" type="button" title="Owner mode">🔓 Owner</button>
   </header>
 
   <section class="card">
@@ -702,6 +754,11 @@ const I18N = {
     search_results_for: "result(s) for “{q}”",
     no_search_results: "No tasks match “{q}”.",
     points_short: "pts",
+    owner_off: "🔓 Owner",
+    owner_on: "✓ Owner",
+    owner_prompt: "Enter owner password:",
+    owner_wrong: "Wrong password.",
+    owner_logout_confirm: "Log out of owner mode?",
     hint_pick: "Search above, or pick a point value to see matching tasks.",
     no_results: "No tasks for {points} points.",
     no_results_hint: "Use \"+ Add task\" to add one.",
@@ -780,6 +837,11 @@ const I18N = {
     search_results_for: "Treffer für „{q}\"",
     no_search_results: "Keine Aufgaben passen zu „{q}\".",
     points_short: "Pkt",
+    owner_off: "🔓 Owner",
+    owner_on: "✓ Owner",
+    owner_prompt: "Owner-Passwort:",
+    owner_wrong: "Falsches Passwort.",
+    owner_logout_confirm: "Owner-Modus verlassen?",
     hint_pick: "Suche oben oder wähle eine Punktzahl, um passende Aufgaben zu sehen.",
     no_results: "Keine Aufgaben mit {points} Punkten.",
     no_results_hint: "Mit „+ Aufgabe hinzufügen\" kannst du eine eintragen.",
@@ -1002,6 +1064,8 @@ const INITIAL_OVERRIDES = {
 
 const STORAGE_KEY = 'qf_overrides_v1';
 const LANG_KEY = 'qf_lang';
+const OWNER_KEY = 'qf_owner';
+const OWNER_HASH = '610c5857a99e641cbe43966e86a4292b7f4817bc8b56a6c0b65ad0b1bdc03fbc';
 const TIER_ORDER = { best: 0, blue: 1, violet: 2, red: 3 };
 
 function safeGet(key) {
@@ -1018,6 +1082,7 @@ let overrides = loadOverrides();
 let editingTask = null;
 let selectedPoints = null;
 let searchQuery = '';
+let isOwner = safeGet(OWNER_KEY) === '1';
 const SELECTED_KEY = 'qf_selected';
 
 function loadOverrides() {
@@ -1093,6 +1158,7 @@ function applyStaticI18n() {
   });
   document.documentElement.lang = currentLang;
   document.title = t('title');
+  updateOwnerUI();
 }
 
 function getPointsGroups() {
@@ -1195,6 +1261,71 @@ function bindTaskActions(container) {
   container.querySelectorAll('[data-edit-id]').forEach(btn => {
     btn.addEventListener('click', () => openEdit(btn.dataset.editId));
   });
+  container.querySelectorAll('[data-tier-for]').forEach(btn => {
+    btn.addEventListener('click', () => changeTaskTier(btn.dataset.tierFor, btn.dataset.tierValue));
+  });
+}
+
+async function sha256Hex(str) {
+  const buf = new TextEncoder().encode(str);
+  const hash = await crypto.subtle.digest('SHA-256', buf);
+  return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function toggleOwner() {
+  if (isOwner) {
+    if (confirm(t('owner_logout_confirm'))) {
+      isOwner = false;
+      safeSet(OWNER_KEY, '0');
+      updateOwnerUI();
+      renderResults();
+    }
+    return;
+  }
+  const pw = prompt(t('owner_prompt'));
+  if (!pw) return;
+  try {
+    const hex = await sha256Hex(pw);
+    if (hex === OWNER_HASH) {
+      isOwner = true;
+      safeSet(OWNER_KEY, '1');
+      updateOwnerUI();
+      renderResults();
+    } else {
+      alert(t('owner_wrong'));
+    }
+  } catch (e) {
+    alert('Crypto API not available in this browser.');
+  }
+}
+
+function updateOwnerUI() {
+  const btn = document.getElementById('owner-btn');
+  if (!btn) return;
+  btn.textContent = isOwner ? t('owner_on') : t('owner_off');
+  btn.classList.toggle('on', isOwner);
+}
+
+function changeTaskTier(taskId, newTier) {
+  if (!TIERS.includes(newTier)) return;
+  const found = findTask(taskId);
+  if (!found) return;
+  if (found.isCustom) {
+    const task = overrides.customTasks.find(x => String(x.id) === String(taskId));
+    if (task) task.tier = newTier;
+  } else {
+    const base = TASKS.find(x => String(x.id) === String(taskId));
+    const ovr = overrides.taskOverrides[taskId] ? { ...overrides.taskOverrides[taskId] } : {};
+    if (base && newTier !== base.tier) {
+      ovr.tier = newTier;
+    } else {
+      delete ovr.tier;
+    }
+    if (Object.keys(ovr).length === 0) delete overrides.taskOverrides[taskId];
+    else overrides.taskOverrides[taskId] = ovr;
+  }
+  saveOverrides();
+  renderResults();
 }
 
 function render() {
@@ -1218,6 +1349,7 @@ function renderTask(task, showPoints) {
   let extras = '';
   if (desc) extras += '<div class="task-extra">' + desc + '</div>';
   if (need) extras += '<div class="task-extra"><span class="label">' + escapeHtml(t('needed_label')) + ':</span> ' + need + '</div>';
+  const ownerChips = isOwner ? renderTierChips(task, tier) : '';
   return (
     '<div class="task tier-' + tier + '">' +
       '<div class="task-row">' +
@@ -1230,11 +1362,22 @@ function renderTask(task, showPoints) {
         '<span class="task-meta">⏱ ' + time + '</span>' +
       '</div>' +
       extras +
+      ownerChips +
       '<div class="task-actions">' +
         '<button class="icon-btn" data-edit-id="' + escapeHtml(String(task.id)) + '">' + escapeHtml(t('edit_btn')) + '</button>' +
       '</div>' +
     '</div>'
   );
+}
+
+function renderTierChips(task, currentTier) {
+  const id = escapeHtml(String(task.id));
+  return '<div class="tier-chips">' + TIERS.map(tk => (
+    '<button type="button" class="tier-chip chip-' + tk + (tk === currentTier ? ' active' : '') +
+      '" data-tier-for="' + id + '" data-tier-value="' + tk + '">' +
+      escapeHtml(t('tier_' + tk)) +
+    '</button>'
+  )).join('') + '</div>';
 }
 
 function findTask(id) {
@@ -1442,6 +1585,8 @@ function init() {
     searchQuery = searchEl.value.trim();
     renderResults();
   });
+  document.getElementById('owner-btn').addEventListener('click', toggleOwner);
+  updateOwnerUI();
   document.getElementById('add-btn').addEventListener('click', openAdd);
   document.getElementById('export-btn').addEventListener('click', handleExport);
   document.getElementById('import-btn').addEventListener('click', () => document.getElementById('import-file').click());
